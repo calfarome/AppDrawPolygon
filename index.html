@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Show drawn polygon area</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.css' rel='stylesheet' />
+<script type="text/javascript" src="js/jquery.min.js"></script>
+ 
+<script type="text/javascript" src="js/script.js"></script>
+<style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+</style>
+</head>
+<body>
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.3/leaflet.draw.css' rel='stylesheet' />
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.3/leaflet.draw.js'></script>
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-geodesy/v0.1.0/leaflet-geodesy.js'></script>
+
+<<script src="https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js" type="text/javascript" charset="utf-8" async defer></script>
+
+<div id='map'></div>
+
+<style>
+.search-ui {
+  position:absolute;
+  top:15px;
+  right:15px;
+  z-index:1000;
+  }
+</style>
+<style>
+.menu-ui {
+  background:#fff;
+  position:absolute;
+  top:15px;right:15px;
+  z-index:1;
+  border-radius:3px;
+  width:120px;
+  border:1px solid rgba(0,0,0,0.4);
+  }
+  .menu-ui a {
+    font-size:15px;
+    color:#404040;
+    display:block;
+    margin:0;padding:0;
+    padding:10px;
+    text-decoration:none;
+    border-bottom:1px solid rgba(0,0,0,0.25);
+    text-align:center;
+    }
+    .menu-ui a:first-child {
+      border-radius:3px 3px 0 0;
+      }
+    .menu-ui a:last-child {
+      border:none;
+      border-radius:0 0 3px 3px;
+      }
+    .menu-ui a:hover {
+      background:#f8f8f8;
+      color:#404040;
+      }
+    .menu-ui a.active,
+    .menu-ui a.active:hover {
+      background:#3887BE;
+      color:#ffff00;
+      }
+</style>
+<script src='data.js'></script>
+<nav id='menu-ui' class='menu-ui'>
+  <a href='#' class='active' id='filter-all'>Mostrar todo</a>
+  <a href='#' id='filter-hotel'>Hospedajes</a>
+  <a href='#' id='filter-bar'>Bares y discotecas</a>
+  <a href='#' id='filter-bank'>Financieras</a>
+  <a href='#' id='filter-restaurant'>Restaurantes</a>
+  <a href='#' id='filter-nothing'>No show</a>
+</nav>
+
+<script>
+  var shape;
+    
+L.mapbox.accessToken = 'pk.eyJ1IjoiY2VzYXIyOCIsImEiOiI0Mm8yUkhnIn0.u8GrcBcjxtt7ao-6LC5TiQ';
+var map = L.mapbox.map('map', 'cesar28.m194al8c'),
+ restaurant = document.getElementById('filter-restaurant'),
+        banks = document.getElementById('filter-bank'),
+        bars = document.getElementById('filter-bar'),
+        hoteles=document.getElementById('filter-hotel'),
+        none=document.getElementById('filter-nothing'),
+        all = document.getElementById('filter-all');
+
+        for (var i = 1; i < geojson.features.length; i++) {
+  
+   if(geojson.features[i].properties.amenity=="restaurant"){
+    geojson.features[i].properties["marker-color"]="#ff8c00";
+    geojson.features[i].properties["marker-symbol"]="restaurant";
+      
+    }
+    if(geojson.features[i].properties.tourism=="hotel"){
+    geojson.features[i].properties["marker-color"]="#8a2be2";
+    geojson.features[i].properties["marker-symbol"]="lodging";
+    
+
+    }
+
+      if(geojson.features[i].properties.amenity=="bar"){
+    geojson.features[i].properties["marker-color"]="#ff0000";
+    geojson.features[i].properties["marker-symbol"]="bar";
+      
+    }
+     if(geojson.features[i].properties.amenity=="nightclub"){
+    geojson.features[i].properties["marker-color"]="#ff0000";
+    geojson.features[i].properties["marker-symbol"]="bar";
+      
+    }
+     if(geojson.features[i].properties.amenity=="bank"){
+    geojson.features[i].properties["marker-color"]="#1087bf";
+    geojson.features[i].properties["marker-symbol"]="bank";
+      
+    }
+
+
+    };
+
+
+
+var markers = L.mapbox.featureLayer()
+    .setGeoJSON(geojson)
+    .addTo(map);
+
+    markers.eachLayer(function(layer) {
+  var content = 
+  '<h2> ' + layer.feature.properties.title + '<\/h2>' +
+  '<p>From: ' + layer.feature.properties.title + '<br \/>' +
+  'to: ' + layer.feature.properties.title + '<\/p>';
+  layer.bindPopup(content);
+});
+
+    bars.onclick = function(e) {
+        all.className = '';
+        hoteles.className = '';
+        // bars.className = '';
+        banks.className = '';
+        restaurant.className = '';
+        this.className = 'active';
+        // The setFilter function takes a GeoJSON feature object
+        // and returns true to show it or false to hide it.
+        markers.setFilter(function(f) {
+          var isInside2 = turf.inside(f, shape);
+            return (f.properties['marker-symbol'] === 'beer' || f.properties['marker-symbol'] === 'bar') && isInside2;
+        });
+        return false;
+ };
+      restaurant.onclick = function(e) {
+        all.className = '';
+        hoteles.className = '';
+        bars.className = '';
+        banks.className = '';
+        // restaurant.className = '';
+        this.className = 'active';
+        // The setFilter function takes a GeoJSON feature object
+        // and returns true to show it or false to hide it.
+        markers.setFilter(function(f) {
+            var isInside2 = turf.inside(f, shape);
+            return f.properties['marker-symbol'] === 'restaurant'&&isInside2;
+        });
+        return false;
+ };
+      banks.onclick = function(e) {
+        all.className = '';
+        hoteles.className = '';
+        bars.className = '';
+        restaurant.className = '';
+        // restaurant.className = '';
+        this.className = 'active';
+        // The setFilter function takes a GeoJSON feature object
+        // and returns true to show it or false to hide it.
+        markers.setFilter(function(f) {
+            var isInside2 = turf.inside(f, shape);
+            return f.properties['marker-symbol'] === 'bank'&&isInside2;
+        });
+        return false;
+ };
+      hoteles.onclick = function(e) {
+        all.className = '';
+        banks.className = '';
+        bars.className = '';
+        restaurant.className = '';
+        // restaurant.className = '';
+        this.className = 'active';
+        // The setFilter function takes a GeoJSON feature object
+        // and returns true to show it or false to hide it.
+        markers.setFilter(function(f) {
+          var isInside2 = turf.inside(f, shape);
+            return f.properties['marker-symbol'] === 'lodging'&&isInside2;
+        });
+        return false;
+    };
+
+    all.onclick = function() {
+        hoteles.className = '';
+        bars.className = '';
+        restaurant.className = '';
+        banks.className = '';
+        this.className = 'active';
+        markers.setFilter(function(f) {
+        var isInside2 = turf.inside(f, shape);
+
+      return (f.properties['marker-symbol'] === 'beer' || f.properties['marker-symbol'] === 'bar'|| f.properties['marker-symbol'] === 'lodging'|| f.properties['marker-symbol'] === 'bank'|| f.properties['marker-symbol'] === 'restaurant')&&isInside2
+        });
+
+        return false;
+    };
+    none.onclick = function(e) {
+        all.className = '';
+        banks.className = '';
+        hoteles.className = '';
+        bars.className = '';
+        restaurant.className = '';
+                //none.className = '';
+        this.className = 'activ89e';
+        markers.setFilter(function(f) {
+            return f.properties['marker-symbol'] === 'hairdresser';
+        });
+        return false;
+    };
+
+    
+var featureGroup = L.featureGroup().addTo(map);
+
+var drawControl = new L.Control.Draw({
+  edit: {
+    featureGroup: featureGroup
+  },
+  draw: {
+    polygon: true,
+    polyline: false,
+    rectangle: false,
+    circle: false,
+    marker: false
+  }
+}).addTo(map);
+
+map.on('draw:created', showPolygonArea);
+map.on('draw:edited', showPolygonAreaEdited);
+
+function showPolygonAreaEdited(e) {
+  e.layers.eachLayer(function(layer) {
+
+    showPolygonArea({ layer: layer });
+  });
+}
+function showPolygonArea(e) {
+  featureGroup.clearLayers();
+  featureGroup.addLayer(e.layer);
+   shape = e.layer.toGeoJSON();
+
+  e.layer.bindPopup((LGeo.area(e.layer) / 1000000).toFixed(2) + ' km<sup>2</sup>');
+  e.layer.openPopup();
+}
+</script>
+</body>
+</html>
